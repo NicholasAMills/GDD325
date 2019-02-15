@@ -19,9 +19,12 @@ var config = {
 };
 //Pass our config to the Phaser game object
 var game = new Phaser.Game(config);
+var audioIsPlaying = false;
 var cursors;
 var graphics;
 var player;
+var leaves, leavesShadow;
+//var spaceBar = game.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 //Preloading image, sound, and any other assets that need to get loaded here
 function preload () {
 	this.isZoomed = false;
@@ -58,8 +61,8 @@ function create () {
 	this.cameras.main.setBounds(0,0, 4800, 2700, true); 
 	this.physics.world.setBounds(0,0, 4800, 2700, true, true, true, true); //Set bounds, first parameter will be top left x bound coordinate, second paramter the top left y bound, followed by width, then height
 	//this.input.setDefaultplayer('url(assets/pics/player.png), pointer');
-	this.player = this.physics.add.sprite(50, 150, 'player').setDepth(1000);
-	this.player.setCollideWorldBounds();
+	this.player = this.physics.add.sprite(50, 150, 'player').setDepth(10);
+	this.player.setCollideWorldBounds(true);
 	//Camera's inputs are its x position (relative to top left corner), y position, camera width, and camera height
 	gameCamera.startFollow(this.player,false, 0.1, 0.1);
 	// startFollow tells the camera to follow (OBJECTNAME, roundPxtoNearestInt, trackSpeedX, trackSpeedY, offsetX,offsetY)
@@ -70,30 +73,40 @@ function create () {
 	initializeAudio();
 	initializeAnim();
 	
-	var leaves = this.add.sprite(0, 0, 'leaves').setDepth(2)
+	this.leaves = this.physics.add.sprite(500, 500, 'leaves').setDepth(2); 
 	//leaves.setScale(2);
-	var leavesShadow = this.add.sprite(leaves.x+10,leaves.y+10,'leaves').setDepth(1);
-	leavesShadow.tint = 0x000000;
-	leavesShadow.alpha = 0.5;
-	leavesShadow.setVisible(false);
-	leaves.setInteractive();
-      leaves.on('pointerover', function() {
-		leavesShadow.setVisible(true);
-		game.gulp.play();
-	  });
-	  leaves.on('pointerout', function() {leavesShadow.setVisible(false);}); //Ensures the shadow goes away...
-      leaves.on('pointerup', function() { 
-		leaves.anims.play('leavesRustle');
-
-	  });
-	 if (this.cameras.main.deadzone) {
-		graphics = this.add.graphics().setScrollFactor(0);
-		graphics.strokeRect(200,200,this.cameras.main.deadzone.width,this.cameras.main.deadzone.height);
-	 }
-	 alert(this.player.getBounds());
+	this.leavesShadow = this.add.sprite(this.leaves.x+10,this.leaves.y+10,'leaves').setDepth(1);
+	this.leavesShadow.tint = 0x000000;
+	this.leavesShadow.alpha = 0.5;
+	this.leavesShadow.setVisible(false);
+	this.leaves.setInteractive(true);
+	  //leaves.on('pointerout', function() {leavesShadow.setVisible(false);}); //Ensures the shadow goes away...
+     // leaves.on('pointerup', function() { 
+	  //});
+	
+	 this.physics.add.overlap(this.player, this.leaves, spriteEffects, null, this);
 }
 
+function spriteEffects() {
+	audioIsPlaying = false;
+	this.leavesShadow.setVisible(true);
+	if (!audioIsPlaying) { 
+		audioIsPlaying = true;
+		this.game.gulp.play();
+		//this.game.gulp.pause();
+	} 
+	//spaceBar.on()
+	
+}
+
+
 function update() {
+	
+	/*if (this.physics.add.overlap(this.player, this.leaves, this.spriteEffects, null, this)) {
+		//DO nothing if overlapping, the function will handle it
+	} else { //When not overlapping ensure we set shadow to invisible
+		leavesShadow.setVisible(false);
+	}*/
 	console.log(this.input.mousePointer.worldX + " px");//Mouse's world coordinate not updating so clicks, on hover, adn other such events wont work...
 	 /*if (game.input.activePointer.isDown) {
 		if (!this.isZoomed) {
